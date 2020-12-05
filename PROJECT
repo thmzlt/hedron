@@ -1,0 +1,8 @@
+domain: hedron-ci.org
+repo: github.com/thmzlt/hedron
+multigroup: true
+version: "2"
+resources:
+- group: core
+  kind: Project
+  version: v1
