@@ -1,0 +1,4 @@
+domain: hedron-ci.org
+repo: github.com/thmzlt/hedron
+version: "2"
+multigroup: true

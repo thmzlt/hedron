@@ -1,0 +1,13 @@
+*.dll
+*.dylib
+*.exe
+*.exe~
+*.so
+*.test
+*.out
+/.env
+/.go
+/bin
+/result
+/result-*
+/vendor
