@@ -1,0 +1,20 @@
+# permissions for end users to view projects.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: project-viewer-role
+rules:
+- apiGroups:
+  - build.hedron-ci.org
+  resources:
+  - projects
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - build.hedron-ci.org
+  resources:
+  - projects/status
+  verbs:
+  - get

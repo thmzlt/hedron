@@ -1,0 +1,12 @@
+apiVersion: build.hedron-ci.org/v1beta1
+kind: Project
+metadata:
+  name: hedron
+spec:
+  image:
+    name: "hedron"
+    entrypoint: ["/bin/hedron"]
+    cmd: []
+  repository:
+    url: "https://github.com/thmzlt/hedron"
+    ref: "refs/heads/master"
