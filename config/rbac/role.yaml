@@ -7,7 +7,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - build.hedron-ci.org
+  - core.hedron.build
   resources:
   - projects
   verbs:
@@ -19,7 +19,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - build.hedron-ci.org
+  - core.hedron.build
   resources:
   - projects/status
   verbs:

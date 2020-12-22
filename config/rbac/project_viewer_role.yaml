@@ -4,17 +4,17 @@ kind: ClusterRole
 metadata:
   name: project-viewer-role
 rules:
-- apiGroups:
-  - build.hedron-ci.org
-  resources:
-  - projects
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - build.hedron-ci.org
-  resources:
-  - projects/status
-  verbs:
-  - get
+  - apiGroups:
+      - core.hedron.build
+    resources:
+      - projects
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - core.hedron.build
+    resources:
+      - projects/status
+    verbs:
+      - get

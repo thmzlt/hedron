@@ -1,4 +1,4 @@
-domain: hedron-ci.org
+domain: hedron.build
 multigroup: true
 repo: github.com/thmzlt/hedron
 resources:

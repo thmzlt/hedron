@@ -17,7 +17,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	buildv1beta1 "github.com/thmzlt/hedron/apis/build/v1beta1"
+	corev1beta1 "github.com/thmzlt/hedron/apis/core/v1beta1"
 )
 
 // ProjectReconciler reconciles a Project object
@@ -27,14 +27,14 @@ type ProjectReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=build.hedron-ci.org,resources=projects,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=build.hedron-ci.org,resources=projects/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core.hedron.build,resources=projects,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core.hedron.build,resources=projects/status,verbs=get;update;patch
 
 func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("project", req.NamespacedName)
 
-	var project buildv1beta1.Project
+	var project corev1beta1.Project
 
 	// Fetch the Project resource
 	err := r.Get(ctx, req.NamespacedName, &project)
@@ -73,6 +73,6 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *ProjectReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&buildv1beta1.Project{}).
+		For(&corev1beta1.Project{}).
 		Complete(r)
 }

@@ -4,7 +4,7 @@ Unlicensed
 
 // Package v1beta1 contains API Schema definitions for the build v1beta1 API group
 // +kubebuilder:object:generate=true
-// +groupName=build.hedron-ci.org
+// +groupName=core.hedron.build
 package v1beta1
 
 import (
@@ -14,7 +14,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "build.hedron-ci.org", Version: "v1beta1"}
+	GroupVersion = schema.GroupVersion{Group: "core.hedron.build", Version: "v1beta1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

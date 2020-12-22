@@ -1,4 +1,4 @@
-apiVersion: build.hedron-ci.org/v1beta1
+apiVersion: core.hedron.build/v1beta1
 kind: Project
 metadata:
   name: project-sample
