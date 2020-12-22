@@ -1,7 +1,0 @@
-apiVersion: core.hedron.build/v1beta1
-kind: Project
-metadata:
-  name: project-sample
-spec:
-  # Add fields here
-  foo: bar
