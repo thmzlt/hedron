@@ -29,6 +29,7 @@ in
     nativeBuildInputs = [
       kubebuilder
       pkgs.go_1_15
+      pkgs.k9s
       pkgs.kind
       pkgs.kubectl
       pkgs.kustomize
