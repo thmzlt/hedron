@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -17,7 +18,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	corev1beta1 "github.com/thmzlt/hedron/apis/core/v1beta1"
+	v1beta1 "github.com/thmzlt/hedron/apis/core/v1beta1"
+	k8s_corev1 "k8s.io/api/core/v1"
+	k8s_metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ProjectReconciler reconciles a Project object
@@ -34,12 +37,13 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("project", req.NamespacedName)
 
-	var project corev1beta1.Project
+	var project v1beta1.Project
+	var job v1beta1.Job
 
-	// Fetch the Project resource
+	// Fetch Project resource
 	err := r.Get(ctx, req.NamespacedName, &project)
 	if err != nil {
-		log.Error(err, "Unable to fetch project")
+		log.Error(err, "Failed to fetch project")
 
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -47,7 +51,7 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Create temporary directory
 	tempDir, err := ioutil.TempDir("", fmt.Sprintf("hedron-%s-", project.Name))
 	if err != nil {
-		log.Error(err, "Error creating temporary directory", "tempDir", tempDir)
+		log.Error(err, "Failed to create temporary directory", "tempDir", tempDir)
 	}
 	defer os.RemoveAll(tempDir)
 
@@ -60,19 +64,46 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		log.Error(err, "Failed to clone repository")
 	}
 
-	// Fetch HEAD
-	ref, err := repo.Head()
+	// Fetch repository HEAD
+	head, err := repo.Head()
 	if err != nil {
 		log.Error(err, "Failed to fetch repository HEAD")
 	}
 
-	log.Info("Repository is ready", "revision", ref.Hash().String())
+	// Derive Job name
+	jobName := fmt.Sprintf("%s-%s", project.Name, head.Hash().String())
+
+	// Fetch Job with matching revision
+	err = r.Get(ctx, client.ObjectKey{
+		Namespace: project.Namespace,
+		Name:      jobName,
+	}, &job)
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		job = v1beta1.Job{
+			ObjectMeta: k8s_metav1.ObjectMeta{
+				Namespace: project.Namespace,
+				Name:      jobName,
+			},
+			Spec: v1beta1.JobSpec{
+				ProjectRef: k8s_corev1.LocalObjectReference{Name: project.Name},
+				Revision:   head.Hash().String(),
+			},
+		}
+		err = r.Create(ctx, &job)
+		if err != nil {
+			log.Error(err, "Failed to create job")
+		}
+		log.Info("Created job", "jobName", job.Name)
+	} else if err != nil {
+		log.Error(err, "Failed to fetch job")
+	}
+	log.Info("Job already exists")
 
 	return ctrl.Result{}, nil
 }
 
 func (r *ProjectReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&corev1beta1.Project{}).
+		For(&v1beta1.Project{}).
 		Complete(r)
 }

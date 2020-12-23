@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - core.hedron.build
   resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - core.hedron.build
+  resources:
+  - jobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - core.hedron.build
+  resources:
   - projects
   verbs:
   - create

@@ -1,8 +1,10 @@
 domain: hedron.build
-multigroup: true
 repo: github.com/thmzlt/hedron
 resources:
-- group: build
+- group: core
   kind: Project
+  version: v1beta1
+- group: core
+  kind: Job
   version: v1beta1
 version: "2"
