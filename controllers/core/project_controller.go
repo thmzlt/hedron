@@ -88,15 +88,23 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				ProjectRef: k8s_corev1.LocalObjectReference{Name: project.Name},
 				Revision:   head.Hash().String(),
 			},
+			Status: v1beta1.JobStatus{
+				State: "Pending",
+			},
 		}
 		err = r.Create(ctx, &job)
 		if err != nil {
 			log.Error(err, "Failed to create job")
 		}
 		log.Info("Created job", "jobName", job.Name)
+
+		return ctrl.Result{}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to fetch job")
+
+		return ctrl.Result{}, nil
 	}
+
 	log.Info("Job already exists")
 
 	return ctrl.Result{}, nil

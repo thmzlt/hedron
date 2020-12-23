@@ -9,16 +9,21 @@ import (
 	k8s_metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed
+
+type State string
+
 type JobSpec struct {
 	ProjectRef k8s_corev1.LocalObjectReference `json:"projectRef,omitempty"`
 	Revision   string                          `json:"revision,omitempty"`
 }
 
 type JobStatus struct {
-	Output string `json:"output,omitempty"`
+	State State `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 
 type Job struct {
 	k8s_metav1.TypeMeta   `json:",inline"`

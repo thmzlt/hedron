@@ -8,6 +8,10 @@ metadata:
   creationTimestamp: null
   name: jobs.core.hedron.build
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
   group: core.hedron.build
   names:
     kind: Job
@@ -15,6 +19,7 @@ spec:
     plural: jobs
     singular: job
   scope: Namespaced
+  subresources: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -46,7 +51,12 @@ spec:
           type: object
         status:
           properties:
-            output:
+            state:
+              enum:
+              - Pending
+              - Running
+              - Succeeded
+              - Failed
               type: string
           type: object
       type: object
