@@ -38,7 +38,7 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("project", req.NamespacedName)
 
 	var project v1beta1.Project
-	var job v1beta1.Job
+	var revision v1beta1.Revision
 
 	// Fetch Project resource
 	err := r.Get(ctx, req.NamespacedName, &project)
@@ -70,42 +70,42 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		log.Error(err, "Failed to fetch repository HEAD")
 	}
 
-	// Derive Job name
-	jobName := fmt.Sprintf("%s-%s", project.Name, head.Hash().String())
+	// Derive Revision name
+	revisionName := fmt.Sprintf("%s-%s", project.Name, head.Hash().String())
 
-	// Fetch Job with matching revision
+	// Fetch Revision with matching revision
 	err = r.Get(ctx, client.ObjectKey{
 		Namespace: project.Namespace,
-		Name:      jobName,
-	}, &job)
+		Name:      revisionName,
+	}, &revision)
 	if err != nil && strings.Contains(err.Error(), "not found") {
-		job = v1beta1.Job{
+		revision = v1beta1.Revision{
 			ObjectMeta: k8s_metav1.ObjectMeta{
 				Namespace: project.Namespace,
-				Name:      jobName,
+				Name:      revisionName,
 			},
-			Spec: v1beta1.JobSpec{
+			Spec: v1beta1.RevisionSpec{
 				ProjectRef: k8s_corev1.LocalObjectReference{Name: project.Name},
 				Revision:   head.Hash().String(),
 			},
-			Status: v1beta1.JobStatus{
+			Status: v1beta1.RevisionStatus{
 				State: "Pending",
 			},
 		}
-		err = r.Create(ctx, &job)
+		err = r.Create(ctx, &revision)
 		if err != nil {
-			log.Error(err, "Failed to create job")
+			log.Error(err, "Failed to create revision")
 		}
-		log.Info("Created job", "jobName", job.Name)
+		log.Info("Created revision", "revisionName", revision.Name)
 
 		return ctrl.Result{}, nil
 	} else if err != nil {
-		log.Error(err, "Failed to fetch job")
+		log.Error(err, "Failed to fetch revision")
 
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("Job already exists")
+	log.Info("Revision already exists")
 
 	return ctrl.Result{}, nil
 }

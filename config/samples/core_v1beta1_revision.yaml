@@ -1,7 +1,7 @@
 apiVersion: core.hedron.build/v1beta1
-kind: Job
+kind: Revision
 metadata:
-  name: job-sample
+  name: revision-sample
 spec:
   # Add fields here
   foo: bar

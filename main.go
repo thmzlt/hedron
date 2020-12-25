@@ -62,12 +62,12 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Project")
 		os.Exit(1)
 	}
-	if err = (&corecontroller.JobReconciler{
+	if err = (&corecontroller.RevisionReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Job"),
+		Log:    ctrl.Log.WithName("controllers").WithName("Revision"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Job")
+		setupLog.Error(err, "unable to create controller", "controller", "Revision")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

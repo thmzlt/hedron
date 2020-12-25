@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: jobs.core.hedron.build
+  name: revisions.core.hedron.build
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.state
@@ -14,10 +14,10 @@ spec:
     type: string
   group: core.hedron.build
   names:
-    kind: Job
-    listKind: JobList
-    plural: jobs
-    singular: job
+    kind: Revision
+    listKind: RevisionList
+    plural: revisions
+    singular: revision
   scope: Namespaced
   subresources: {}
   validation:
