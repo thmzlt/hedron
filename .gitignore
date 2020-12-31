@@ -10,5 +10,4 @@
 /bin
 /result
 /result-*
-/runner/.go
 /vendor
