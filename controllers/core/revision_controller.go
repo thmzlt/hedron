@@ -39,8 +39,22 @@ func (r *RevisionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// Check Revision status
-	log.Info("Revision status", "state", revision.Status.State)
+	switch revision.Status.State {
+	case "Pending":
+		return r.ReconcilePending(log, revision)
+	case "Building":
+		log.Info("Revision is building")
+	case "Ready":
+		log.Info("Revision is ready")
+	case "Failed":
+		log.Info("Revision is failed")
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *RevisionReconciler) ReconcilePending(log logr.Logger, revision v1beta1.Revision) (ctrl.Result, error) {
+	log.Info("Revision is pending")
 
 	return ctrl.Result{}, nil
 }

@@ -105,8 +105,6 @@ func (r *ProjectReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("Revision already exists")
-
 	return ctrl.Result{}, nil
 }
 

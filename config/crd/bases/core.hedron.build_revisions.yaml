@@ -54,8 +54,8 @@ spec:
             state:
               enum:
               - Pending
-              - Running
-              - Succeeded
+              - Building
+              - Ready
               - Failed
               type: string
           type: object
