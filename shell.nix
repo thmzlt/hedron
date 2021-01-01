@@ -39,6 +39,7 @@ in
       export GOPATH="$(pwd)/.go"
       export GOCACHE=""
       export GO111MODULE="on"
+      export PATH="$PATH:$(pwd)/.go/bin"
 
       go mod init ${attrs.goPackagePath}
 
