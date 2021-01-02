@@ -14,7 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -28,42 +27,40 @@ type RevisionReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-type contextKey string
-
-var (
-	contextKeyLog      = contextKey("log")
-	contextKeyRequest  = contextKey("request")
-	contextKeyRevision = contextKey("revision")
-)
-
 // +kubebuilder:rbac:groups=core.hedron.build,resources=revisions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.hedron.build,resources=revisions/status,verbs=get;update;patch
 
 func (r *RevisionReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("revision", request.NamespacedName)
-	ctx := context.WithValue(context.Background(), contextKeyLog, log)
-
-	requestCtx := context.WithValue(ctx, contextKeyRequest, request)
+	requestCtx := context.WithValue(context.Background(), contextKeyRequest, request)
 
 	revision, err := r.fetchRevision(requestCtx)
-	if err != nil {
-		log.Error(err, "Failed to fetch revision")
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		r.Log.Info("Revision no longer exists", "revision", request.NamespacedName)
 
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	} else if err != nil {
+		r.Log.Error(err, "Failed to fetch revision")
+
+		return ctrl.Result{}, err
 	}
 
 	revisionCtx := context.WithValue(requestCtx, contextKeyRevision, revision)
 
 	if revision.Status.State == "Failed" || revision.Status.State == "Succeeded" {
-		log.Info(fmt.Sprintf("Revision is %s", strings.ToLower(string(revision.Status.State))))
+		state := strings.ToLower(string(revision.Status.State))
+		r.Log.Info(fmt.Sprintf("Revision is %s", state))
+
+		return ctrl.Result{}, nil
 	}
 
 	job, err := r.fetchJob(revisionCtx)
-	if err != nil {
+	if err != nil && strings.Contains(err.Error(), "not found") {
 		job, err = r.createJob(revisionCtx)
 		if err != nil {
-			log.Error(err, "Failed to create job")
+			r.Log.Error(err, "Failed to create job")
 		}
+	} else if err != nil {
+		r.Log.Error(err, "Failed to fetch job")
 	}
 
 	if job.Status.Active == 1 {
@@ -76,9 +73,10 @@ func (r *RevisionReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error
 		revision.Status.State = "Succeeded"
 	}
 
-	if err = r.Update(ctx, &revision); err != nil {
-		log.Error(err, "Failed to update revision state")
+	if err = r.Update(revisionCtx, &revision); err != nil {
+		r.Log.Error(err, "Failed to update revision state")
 	}
+	r.Log.Info("Updated revision state", "state", revision.Status.State)
 
 	return ctrl.Result{}, nil
 }
@@ -86,7 +84,6 @@ func (r *RevisionReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error
 func (r *RevisionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ownerKey := ".metadata.controller"
 	apiGVStr := v1beta1.GroupVersion.String()
-	log := r.Log.WithName("setup")
 
 	if err := mgr.GetFieldIndexer().IndexField(&batchv1.Job{}, ownerKey, func(object runtime.Object) []string {
 		job := object.(*batchv1.Job)
@@ -107,6 +104,7 @@ func (r *RevisionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.Revision{}).
+		Owns(&batchv1.Job{}).
 		Complete(r)
 }
 
@@ -115,7 +113,7 @@ func (r *RevisionReconciler) createJob(ctx context.Context) (batchv1.Job, error)
 
 	job := batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-job", revision.Name),
+			Name:      revision.Name,
 			Namespace: revision.Namespace,
 		},
 		Spec: batchv1.JobSpec{
@@ -145,10 +143,7 @@ func (r *RevisionReconciler) fetchJob(ctx context.Context) (batchv1.Job, error) 
 	var job batchv1.Job
 
 	request := ctx.Value(contextKeyRequest).(ctrl.Request)
-	jobName := types.NamespacedName{
-		Namespace: request.NamespacedName.Namespace,
-		Name:      fmt.Sprintf("%s-job", request.NamespacedName.Name),
-	}
+	jobName := request.NamespacedName
 
 	return job, r.Get(ctx, jobName, &job)
 }
