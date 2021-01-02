@@ -84,6 +84,27 @@ func (r *RevisionReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error
 }
 
 func (r *RevisionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	ownerKey := ".metadata.controller"
+	apiGVStr := v1beta1.GroupVersion.String()
+	log := r.Log.WithName("setup")
+
+	if err := mgr.GetFieldIndexer().IndexField(&batchv1.Job{}, ownerKey, func(object runtime.Object) []string {
+		job := object.(*batchv1.Job)
+		owner := metav1.GetControllerOf(job)
+
+		// Not a match (not controlled at all)
+		if owner == nil {
+			return nil
+		}
+		// Not a match (not controlled by a revision)
+		if owner.APIVersion != apiGVStr || owner.Kind != "Revision" {
+			return nil
+		}
+		// Match
+		return []string{owner.Name}
+	}); err != nil {
+		return err
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.Revision{}).
 		Complete(r)
@@ -111,6 +132,10 @@ func (r *RevisionReconciler) createJob(ctx context.Context) (batchv1.Job, error)
 				},
 			},
 		},
+	}
+
+	if err := ctrl.SetControllerReference(&revision, &job, r.Scheme); err != nil {
+		return job, err
 	}
 
 	return job, r.Create(ctx, &job)
